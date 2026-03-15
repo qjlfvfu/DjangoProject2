@@ -1,0 +1,72 @@
+{% extends 'spammanager/base.html' %}
+{% load i18n %}
+
+{% block title %}Вход в систему{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Вход в систему</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Email (username field) -->
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Email *</label>
+                            <input type="email" name="username" class="form-control" id="id_username" required>
+                            {% if form.username.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.username.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Пароль -->
+                        <div class="mb-3">
+                            <label for="id_password" class="form-label">Пароль *</label>
+                            <input type="password" name="password" class="form-control" id="id_password" required>
+                            {% if form.password.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.password.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                Войти
+                            </button>
+                            <div class="text-center mt-3">
+                                <a href="{% url 'users:register' %}" class="btn btn-link">
+                                    Нет аккаунта? Зарегистрируйтесь
+                                </a>
+                                <br>
+                                <a href="#" class="btn btn-link">
+                                    Забыли пароль?
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

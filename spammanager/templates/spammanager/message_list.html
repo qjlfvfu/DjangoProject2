@@ -1,0 +1,90 @@
+
+{% extends 'spammanager/base.html' %}
+
+{% block title %}Список сообщений{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Мои сообщения</h1>
+        <a href="{% url 'spammanager:message_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Создать сообщение
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Тема письма</th>
+                        <th>Текст письма</th>
+                        <th>Дата создания</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for message in messages %}
+                    <tr>
+                        <td>{{ message.id }}</td>
+                        <td>{{ message.subject }}</td>
+                        <td>{{ message.body|truncatechars:50 }}</td>
+                        <td>{{ message.created_at|date:"d.m.Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'spammanager:message_update' message.pk %}" class="btn btn-sm btn-warning" title="Редактировать">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'spammanager:message_delete' message.pk %}" class="btn btn-sm btn-danger" title="Удалить">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">
+                            <i class="bi bi-envelope"></i> Нет сообщений
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Пагинация -->
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="bi bi-chevron-left"></i> Назад
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                    Вперед <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

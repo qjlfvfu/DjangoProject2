@@ -1,0 +1,90 @@
+{% extends 'spammanager/base.html' %}
+{% load i18n %}
+
+{% block title %}Главная - SpamManager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Добро пожаловать в SpamManager!</h1>
+        <p class="lead">Сервис для управления email-рассылками</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-header">Клиенты</div>
+            <div class="card-body">
+                <h5 class="card-title display-4">{{ total_clients }}</h5>
+                <p class="card-text">Всего клиентов</p>
+                <a href="{% url 'spammanager:client_list' %}" class="btn btn-light">Управлять</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">Сообщения</div>
+            <div class="card-body">
+                <h5 class="card-title display-4">{{ total_messages }}</h5>
+                <p class="card-text">Всего сообщений</p>
+                <a href="{% url 'spammanager:message_list' %}" class="btn btn-light">Управлять</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header">Рассылки</div>
+            <div class="card-body">
+                <h5 class="card-title display-4">{{ total_mailings }}</h5>
+                <p class="card-text">Всего рассылок</p>
+                <a href="{% url 'spammanager:mailing_list' %}" class="btn btn-light">Управлять</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Статус рассылок</div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Создана
+                        <span class="badge bg-primary rounded-pill">{{ created_mailings }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Запущена
+                        <span class="badge bg-success rounded-pill">{{ started_mailings }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Завершена
+                        <span class="badge bg-secondary rounded-pill">{{ completed_mailings }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Статистика попыток</div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Успешных отправок
+                        <span class="badge bg-success rounded-pill">{{ success_attempts }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Неуспешных отправок
+                        <span class="badge bg-danger rounded-pill">{{ failed_attempts }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
