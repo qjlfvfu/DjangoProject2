@@ -11,140 +11,124 @@
         </a>
     </div>
 
-    <!-- Статистика -->
+    <!-- Фильтры по статусам -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary">
-                <div class="card-body">
-                    <h5 class="card-title">Всего</h5>
-                    <p class="card-text display-6">{{ page_obj.paginator.count }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">Завершено</h5>
-                    <p class="card-text display-6">{{ completed_count }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-warning">
-                <div class="card-body">
-                    <h5 class="card-title">Активные</h5>
-                    <p class="card-text display-6">{{ active_count }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-secondary">
-                <div class="card-body">
-                    <h5 class="card-title">Черновики</h5>
-                    <p class="card-text display-6">{{ draft_count }}</p>
-                </div>
+        <div class="col-md-12">
+            <div class="btn-group" role="group">
+                <a href="?status=all" class="btn btn-outline-secondary {% if not request.GET.status or request.GET.status == 'all' %}active{% endif %}">
+                    Все ({{ mailings.count }})
+                </a>
+                <a href="?status=created" class="btn btn-outline-primary {% if request.GET.status == 'created' %}active{% endif %}">
+                    Созданы ({{ created_count }})
+                </a>
+                <a href="?status=started" class="btn btn-outline-success {% if request.GET.status == 'started' %}active{% endif %}">
+                    Запущены ({{ started_count }})
+                </a>
+                <a href="?status=completed" class="btn btn-outline-secondary {% if request.GET.status == 'completed' %}active{% endif %}">
+                    Завершены ({{ completed_count }})
+                </a>
             </div>
         </div>
     </div>
 
-    <!-- Таблица рассылок -->
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Название</th>
-                    <th>Статус</th>
-                    <th>Дата начала</th>
-                    <th>Дата окончания</th>
-                    <th>Сообщение</th>
-                    <th>Получателей</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for mailing in mailings %}
-                <tr>
-                    <td>{{ mailing.id }}</td>
-                    <td>{{ mailing.name|default:"Без названия" }}</td>
-                    <td>
-                        {% if mailing.status == 'completed' %}
-                            <span class="badge bg-success">Завершено</span>
-                        {% elif mailing.status == 'active' %}
-                            <span class="badge bg-warning text-dark">Активно</span>
-                        {% elif mailing.status == 'draft' %}
-                            <span class="badge bg-secondary">Черновик</span>
-                        {% elif mailing.status == 'created' %}
-                            <span class="badge bg-info text-dark">Создано</span>
-                        {% else %}
-                            <span class="badge bg-danger">{{ mailing.get_status_display }}</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ mailing.start_time|date:"d.m.Y H:i" }}</td>
-                    <td>{{ mailing.end_time|date:"d.m.Y H:i" }}</td>
-                    <td>{{ mailing.recipients.count }}</td>
-                    <td>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <a href="{% url 'spammanager:mailing_detail' mailing.pk %}" class="btn btn-info" title="Просмотр">
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Период</th>
+                        <th>Статус</th>
+                        <th>Сообщение</th>
+                        <th>Получателей</th>
+                        <th>Успешно/Всего</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mailing in mailings %}
+                    <tr>
+                        <td>{{ mailing.id }}</td>
+                        <td>
+                            {{ mailing.start_time|date:"d.m.Y H:i" }}<br>
+                            <small class="text-muted">до {{ mailing.end_time|date:"d.m.Y H:i" }}</small>
+                        </td>
+                        <td>
+                            {% if mailing.status == 'created' %}
+                            <span class="badge bg-primary">Создана</span>
+                            {% elif mailing.status == 'started' %}
+                            <span class="badge bg-success">Запущена</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Завершена</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ mailing.message.subject|truncatechars:30 }}</strong>
+                        </td>
+                        <td>{{ mailing.recipients.count }}</td>
+                        <td>
+                            {% with success=mailing.attempts.all|dictsort:"status"|selectattr:"status"|equalto:"success"|length total=mailing.attempts.count %}
+                                <span class="text-success">{{ success }}</span> / <span class="text-muted">{{ total }}</span>
+                                {% if total > 0 %}
+                                <div class="progress mt-1" style="height: 4px;">
+                                    <div class="progress-bar bg-success" style="width: {% widthratio success total 100 %}%"></div>
+                                </div>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            <a href="{% url 'spammanager:mailing_detail' mailing.pk %}" class="btn btn-sm btn-info" title="Просмотр">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <a href="{% url 'spammanager:mailing_update' mailing.pk %}" class="btn btn-warning" title="Редактировать">
+                            <a href="{% url 'spammanager:mailing_update' mailing.pk %}" class="btn btn-sm btn-warning" title="Редактировать">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <a href="{% url 'spammanager:mailing_delete' mailing.pk %}" class="btn btn-danger" title="Удалить">
+                            <a href="{% url 'spammanager:mailing_delete' mailing.pk %}" class="btn btn-sm btn-danger" title="Удалить">
                                 <i class="bi bi-trash"></i>
                             </a>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="8" class="text-center py-4">
-                        <p class="text-muted mb-2">У вас пока нет рассылок</p>
-                        <a href="{% url 'spammanager:mailing_create' %}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Создать первую рассылку
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-envelope-paper"></i> Нет рассылок<br>
+                            <a href="{% url 'spammanager:mailing_create' %}" class="btn btn-sm btn-primary mt-2">Создать первую рассылку</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Пагинация -->
     {% if is_paginated %}
-    <nav aria-label="Page navigation" class="mt-4">
+    <nav class="mt-4">
         <ul class="pagination justify-content-center">
             {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page=1" aria-label="First">
-                    <span aria-hidden="true">&laquo;&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                    <i class="bi bi-chevron-left"></i> Назад
                 </a>
             </li>
             {% endif %}
 
             {% for num in page_obj.paginator.page_range %}
                 {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                </li>
                 {% endif %}
             {% endfor %}
 
             {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                    <span aria-hidden="true">&raquo;&raquo;</span>
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                    Вперед <i class="bi bi-chevron-right"></i>
                 </a>
             </li>
             {% endif %}

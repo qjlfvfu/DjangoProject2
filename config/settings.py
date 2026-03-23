@@ -12,23 +12,24 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+load_dotenv(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY ="django-insecure-t^_#p+rlyv2&g)g-pxivscv-c4#@*j&1$ct!r9i_p8wpb+*%dy"
+SECRET_KEY =os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
+DEBUG = os.getenv('DEBUG') == 'True'
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 
 # Application definition
@@ -43,12 +44,12 @@ INSTALLED_APPS = [
     "users",
     "spammanager",
 ]
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = "users.CustomUser"
 
 # URL для перенаправления на главную spammanager
-LOGIN_URL = 'users:login'
-LOGIN_REDIRECT_URL = 'spammanager:home'
-LOGOUT_REDIRECT_URL = 'spammanager:home'
+LOGIN_URL = "users:login"
+LOGIN_REDIRECT_URL = "spammanager:home"
+LOGOUT_REDIRECT_URL = "spammanager:home"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

@@ -9,44 +9,50 @@ from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 class UserRegisterView(CreateView):
     """Регистрация нового пользователя"""
+
     model = CustomUser
     form_class = CustomUserCreationForm
-    template_name = 'users/register.html'
-    success_url = reverse_lazy('users:login')
+    template_name = "users/register.html"
+    success_url = reverse_lazy("users:login")
 
     def form_valid(self, form):
-        messages.success(self.request, 'Регистрация прошла успешно! Теперь вы можете войти.')
+        messages.success(
+            self.request, "Регистрация прошла успешно! Теперь вы можете войти."
+        )
         return super().form_valid(form)
 
 
 class UserLoginView(LoginView):
     """Вход в систему"""
-    template_name = 'users/login.html'
+
+    template_name = "users/login.html"
     redirect_authenticated_user = True
 
     def get_success_url(self):
         # Перенаправляем на главную страницу spammanager
-        return reverse_lazy('spammanager:home')
+        return reverse_lazy("spammanager:home")
 
     def form_valid(self, form):
-        messages.success(self.request, f'Добро пожаловать, {form.get_user().email}!')
+        messages.success(self.request, f"Добро пожаловать, {form.get_user().email}!")
         return super().form_valid(form)
 
 
 class UserLogoutView(LogoutView):
     """Выход из системы"""
-    next_page = reverse_lazy('spammanager:home')  # На главную после выхода
+
+    next_page = reverse_lazy("spammanager:home")  # На главную после выхода
 
     def dispatch(self, request, *args, **kwargs):
-        messages.info(request, 'Вы вышли из системы.')
+        messages.info(request, "Вы вышли из системы.")
         return super().dispatch(request, *args, **kwargs)
 
 
 class ProfileView(LoginRequiredMixin, DetailView):
     """Профиль пользователя"""
+
     model = CustomUser
-    template_name = 'users/profile.html'
-    context_object_name = 'user'
+    template_name = "users/profile.html"
+    context_object_name = "user"
 
     def get_object(self):
         return self.request.user
@@ -56,33 +62,39 @@ class ProfileView(LoginRequiredMixin, DetailView):
         # Добавляем статистику
         try:
             from spammanager.models import Client, Message, Mailing
-            context['total_clients'] = Client.objects.filter(owner=self.request.user).count()
-            context['total_messages'] = Message.objects.filter(owner=self.request.user).count()
-            context['total_mailings'] = Mailing.objects.filter(owner=self.request.user).count()
+
+            context["total_clients"] = Client.objects.filter(
+                owner=self.request.user
+            ).count()
+            context["total_messages"] = Message.objects.filter(
+                owner=self.request.user
+            ).count()
+            context["total_mailings"] = Mailing.objects.filter(
+                owner=self.request.user
+            ).count()
         except:
             # Если модели еще не созданы или приложение не установлено
-            context['total_clients'] = 0
-            context['total_messages'] = 0
-            context['total_mailings'] = 0
+            context["total_clients"] = 0
+            context["total_messages"] = 0
+            context["total_mailings"] = 0
         return context
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     """Редактирование профиля"""
+
     model = CustomUser
     form_class = CustomUserChangeForm
-    template_name = 'users/profile_edit.html'
-    success_url = reverse_lazy('users:profile')
+    template_name = "users/profile_edit.html"
+    success_url = reverse_lazy("users:profile")
 
-    def get_object(self):
+    def get_object(self, **kwargs):
         return self.request.user
 
     def form_valid(self, form):
-        messages.success(self.request, 'Профиль успешно обновлен!')
+        messages.success(self.request, "Профиль успешно обновлен!")
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        messages.error(self.request, 'Пожалуйста, исправьте ошибки в форме.')
+        messages.error(self.request, "Пожалуйста, исправьте ошибки в форме.")
         return super().form_invalid(form)
-
-
