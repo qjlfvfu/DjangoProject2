@@ -1,0 +1,40 @@
+{% extends 'spammanager/base.html' %}
+
+{% block title %}Удаление клиента{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Удаление клиента</h4>
+                </div>
+                <div class="card-body">
+                    <p class="fs-5">Вы уверены, что хотите удалить клиента?</p>
+                    <div class="alert alert-warning">
+                        <strong>{{ client.full_name }}</strong><br>
+                        Email: {{ client.email }}<br>
+                        {% if client.comment %}
+                        Комментарий: {{ client.comment }}
+                        {% endif %}
+                    </div>
+                    <p class="text-danger">Это действие невозможно отменить!</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Да, удалить
+                            </button>
+                            <a href="{% url 'spammanager:client_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

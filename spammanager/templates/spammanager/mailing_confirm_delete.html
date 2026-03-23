@@ -1,0 +1,50 @@
+{% extends 'spammanager/base.html' %}
+
+{% block title %}Удаление рассылки{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Удаление рассылки</h4>
+                </div>
+                <div class="card-body">
+                    <p class="fs-5">Вы уверены, что хотите удалить рассылку?</p>
+                    <div class="alert alert-warning">
+                        <strong>Рассылка #{{ mailing.id }}</strong><br>
+                        Период: с {{ mailing.start_time|date:"d.m.Y H:i" }} по {{ mailing.end_time|date:"d.m.Y H:i" }}<br>
+                        Статус: <span class="badge bg-{% if mailing.status == 'started' %}success{% elif mailing.status == 'completed' %}secondary{% else %}primary{% endif %}">
+                            {{ mailing.get_status_display }}
+                        </span><br>
+                        Сообщение: {{ mailing.message.subject }}<br>
+                        Получателей: {{ mailing.recipients.count }}
+                    </div>
+                    
+                    {% if mailing.attempts.count > 0 %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> У этой рассылки есть история отправок ({{ mailing.attempts.count }} попыток).<br>
+                        Вся история также будет удалена!
+                    </div>
+                    {% endif %}
+                    
+                    <p class="text-danger">Это действие невозможно отменить!</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Да, удалить
+                            </button>
+                            <a href="{% url 'spammanager:mailing_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
