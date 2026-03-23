@@ -17,7 +17,7 @@ class CustomUser(AbstractUser):
         verbose_name="mail пользователя",
     )
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
-    city = models.CharField(max_length=100, blank=True, null=True, verbose_name="Город")
+    country = models.CharField(max_length=100, blank=True, verbose_name="Страна")
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     comment = models.TextField(null=True, blank=True, verbose_name="комментарии")
     is_active = models.BooleanField(default=True)

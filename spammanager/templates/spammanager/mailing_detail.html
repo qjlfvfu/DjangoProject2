@@ -76,6 +76,16 @@
                         <a href="{% url 'spammanager:mailing_delete' mailing.pk %}" class="btn btn-danger">
                             <i class="bi bi-trash"></i> Удалить
                         </a>
+                        {% if mailing.can_send %}
+                        <form method="post" action="{% url 'spammanager:mailing_send' mailing.pk %}"
+                              style="display: inline;"
+                              onsubmit="return confirm('Запустить рассылку сейчас?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-send"></i> Запустить рассылку
+                            </button>
+                        </form>
+                        {% endif %}
                         <a href="{% url 'spammanager:mailing_list' %}" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Назад к списку
                         </a>
@@ -83,7 +93,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-4">
             <!-- Статистика -->
             <div class="card mb-4">
@@ -91,21 +101,27 @@
                     <h5 class="mb-0">Статистика отправки</h5>
                 </div>
                 <div class="card-body">
+                    {% with total=attempts.count success=attempts|dictsort:"status"|length %}
                     <div class="text-center mb-3">
-                        <h2 class="display-4">{{ attempts.count }}</h2>
+                        <h2 class="display-4">{{ total }}</h2>
                         <p class="text-muted">Всего попыток</p>
                     </div>
-                    
+                    {% endwith %}
+
                     <div class="row text-center">
                         <div class="col-6">
                             <div class="bg-success text-white p-2 rounded">
-                                <h3>{{ mailing.attempts.all|dictsort:"status"|selectattr:"status"|equalto:"success"|length }}</h3>
+                                {% with success_count=attempts|dictsort:"status"|length %}
+                                <h3>{{ success_count }}</h3>
+                                {% endwith %}
                                 <small>Успешно</small>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="bg-danger text-white p-2 rounded">
-                                <h3>{{ mailing.attempts.all|dictsort:"status"|selectattr:"status"|equalto:"failed"|length }}</h3>
+                                {% with failed_count=attempts|dictsort:"status"|length %}
+                                <h3>{{ failed_count }}</h3>
+                                {% endwith %}
                                 <small>Ошибок</small>
                             </div>
                         </div>

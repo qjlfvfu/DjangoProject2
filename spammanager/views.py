@@ -132,19 +132,32 @@ class MailingListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        # Обновляем статус для каждой рассылки
+        # Получаем все рассылки пользователя
         mailings = Mailing.objects.filter(owner=self.request.user)
+        # Обновляем статусы
         for mailing in mailings:
             mailing.update_status()
         return mailings
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Добавляем статистику по статусам
-        mailings = context['mailings']
-        context['created_count'] = mailings.filter(status=Mailing.STATUS_CREATED).count()
-        context['started_count'] = mailings.filter(status=Mailing.STATUS_STARTED).count()
-        context['completed_count'] = mailings.filter(status=Mailing.STATUS_COMPLETED).count()
+
+        # Получаем оригинальный QuerySet для подсчета (не пагинированный)
+        all_mailings = Mailing.objects.filter(owner=self.request.user)
+        for mailing in all_mailings:
+            mailing.update_status()
+
+        # Считаем по статусам из оригинального QuerySet
+        context['created_count'] = all_mailings.filter(status=Mailing.STATUS_CREATED).count()
+        context['started_count'] = all_mailings.filter(status=Mailing.STATUS_STARTED).count()
+        context['completed_count'] = all_mailings.filter(status=Mailing.STATUS_COMPLETED).count()
+
+        # Для каждой рассылки в пагинированном списке добавляем статистику
+        for mailing in context['mailings']:
+            mailing.success_count = mailing.attempts.filter(status='success').count()
+            mailing.failed_count = mailing.attempts.filter(status='failed').count()
+            mailing.total_attempts = mailing.attempts.count()
+
         return context
 
 
@@ -244,18 +257,22 @@ class MailingAttemptListView(LoginRequiredMixin, ListView):
         ).select_related("mailing", "recipient")
 
 
-@method_decorator(cache_page(60 * 30), name="dispatch")
 class ClientListView(LoginRequiredMixin, ListView):
     """Список клиентов"""
-
     model = Client
     template_name = "spammanager/client_list.html"
     context_object_name = "clients"
     paginate_by = 10
 
     def get_queryset(self):
-        return Client.objects.filter(owner=self.request.user)
-
+        queryset = Client.objects.filter(owner=self.request.user)
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                models.Q(email__icontains=search) |
+                models.Q(full_name__icontains=search)
+            )
+        return queryset
 
 class ClientCreateView(LoginRequiredMixin, CreateView):
     """Создание клиента"""
