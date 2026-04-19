@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-app}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PYTHON_IMAGE: ${PYTHON_IMAGE:-python}
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: "false"
+      ALLOWED_HOSTS: "localhost,backend"
+      DB_HOST: postgres
+      DB_NAME: ${DB_NAME:-app}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PORT: "5432"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      USE_REDIS: "1"
+    volumes:
+      - ./media:/app/media
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    ports:
+      - "8000:8000"
+#
+#  celery:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    command: celery -A config worker -l info
+#    environment:
+#      SECRET_KEY: ${SECRET_KEY}
+#      DEBUG: "false"
+#      DB_HOST: postgres
+#      DB_NAME: ${DB_NAME:-app}
+#      DB_USER: ${DB_USER:-postgres}
+#      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+#      DB_PORT: "5432"
+#      REDIS_HOST: redis
+#      REDIS_PORT: "6379"
+#    depends_on:
+#      postgres: { condition: service_healthy }
+#      redis: { condition: service_healthy }
+#    volumes:
+#      - ./media:/app/media
+
+volumes:
+  postgres_data:
+  redis_data:
