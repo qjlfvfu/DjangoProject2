@@ -1,52 +1,56 @@
 services:
   postgres:
-    image: postgres
+    image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ${DATABASES_NAME}
-      POSTGRES_USER: ${DATABASES_USER}
-      POSTGRES_PASSWORD: ${NIK}
+      POSTGRES_DB: ${DB_NAME:-djangoproject2_db}
+      POSTGRES_USER: ${DB_USER:-djangoproject2_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-your_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
     volumes:
       - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 3s
-      timeout: 3s
-      retries: 5
 
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        PYTHON_IMAGE: ${PYTHON_IMAGE:-python}
-    environment:
-      SECRET_KEY: ${SECRET_KEY}
-      DEBUG: "false"
-      ALLOWED_HOSTS: "localhost,backend"
-      DB_HOST: postgres
-      DB_NAME: ${DB_NAME:-app}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_PORT: "5432"
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      USE_REDIS: "1"
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - ./media:/app/media
-    depends_on:
-      postgres: { condition: service_healthy }
-      redis: { condition: service_healthy }
+      - .:/app
     ports:
       - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
 
   celery:
-      build: .
-      command: celery -A config worker -l info
-      env_file:
-        - .env.docker
+    build: .
+    command: celery -A config worker -l info
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+
+  celery-beat:
+    build: .
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+      - redis
+      - celery
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
 
 volumes:
   postgres_data:

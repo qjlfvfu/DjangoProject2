@@ -5,6 +5,7 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 from .models import CustomUser
 from .forms import CustomUserCreationForm, CustomUserChangeForm
+from .tasks import send_welcome_email
 
 
 class UserRegisterView(CreateView):
@@ -16,10 +17,11 @@ class UserRegisterView(CreateView):
     success_url = reverse_lazy("users:login")
 
     def form_valid(self, form):
-        messages.success(
-            self.request, "Регистрация прошла успешно! Теперь вы можете войти."
-        )
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        # Отправляем приветственное письмо после успешной регистрации
+        send_welcome_email.delay(self.object.id)
+        messages.success(self.request, 'Регистрация прошла успешно! Проверьте почту.')
+        return response
 
 
 class UserLoginView(LoginView):
