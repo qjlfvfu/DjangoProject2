@@ -1,4 +1,4 @@
-name: Django GOTEST
+name: Django Gotest
 
 on:
   push:
