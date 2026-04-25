@@ -19,7 +19,7 @@ class ClientModelTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            email="test@test.com", password="testpass123", name="Test User"
+            username='testuser',email="test@test.com", password="testpass123", name="Test User"
         )
 
     def test_create_client(self):
@@ -48,7 +48,7 @@ class MessageModelTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            email="test@test.com", password="testpass123", name="Test User"
+            username='testuser',email="test@test.com", password="testpass123", name="Test User"
         )
 
     def test_create_message(self):
@@ -72,7 +72,7 @@ class MailingModelTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            email="test@test.com", password="testpass123", name="Test User"
+            username='testuser',email="test@test.com", password="testpass123", name="Test User"
         )
         self.message = Message.objects.create(
             subject="Тестовая тема", body="Тестовое тело", owner=self.user
@@ -194,7 +194,7 @@ class MailingAttemptModelTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            email="test@test.com", password="testpass123", name="Test User"
+            username='testuser',email="test@test.com", password="testpass123", name="Test User"
         )
         self.message = Message.objects.create(
             subject="Тест", body="Тело", owner=self.user
@@ -246,7 +246,7 @@ class MailingAPITest(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            email="test@test.com", password="testpass123", name="Test User"
+            username='testuser',email="test@test.com", password="testpass123", name="Test User"
         )
         self.client.force_authenticate(user=self.user)
 
@@ -299,10 +299,10 @@ class PermissionsTest(TestCase):
 
     def setUp(self):
         self.user1 = User.objects.create_user(
-            email="user1@test.com", password="pass123", name="User One"
+            username='testuser1',email="user1@test.com", password="pass123", name="User One"
         )
         self.user2 = User.objects.create_user(
-            email="user2@test.com", password="pass123", name="User Two"
+            username='testuser2',email="user2@test.com", password="pass123", name="User Two"
         )
         self.message1 = Message.objects.create(
             subject="User1 message", body="Body", owner=self.user1
@@ -330,7 +330,7 @@ class EmailSendingTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            email="test@test.com", password="testpass123", name="Test User"
+            username='testuser',email="test@test.com", password="testpass123", name="Test User"
         )
         self.message = Message.objects.create(
             subject="Тестовое письмо", body="Содержание письма", owner=self.user
