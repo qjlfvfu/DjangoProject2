@@ -20,7 +20,7 @@ class UserRegisterView(CreateView):
         response = super().form_valid(form)
         # Отправляем приветственное письмо после успешной регистрации
         send_welcome_email.delay(self.object.id)
-        messages.success(self.request, 'Регистрация прошла успешно! Проверьте почту.')
+        messages.success(self.request, "Регистрация прошла успешно! Проверьте почту.")
         return response
 
 
@@ -74,7 +74,7 @@ class ProfileView(LoginRequiredMixin, DetailView):
             context["total_mailings"] = Mailing.objects.filter(
                 owner=self.request.user
             ).count()
-        except:
+        except Exception as e:
             # Если модели еще не созданы или приложение не установлено
             context["total_clients"] = 0
             context["total_messages"] = 0

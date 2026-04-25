@@ -48,5 +48,7 @@ urlpatterns = [
         views.MailingDeleteView.as_view(),
         name="mailing_delete",
     ),
-    path('attempts/', views.MailingAttemptListView.as_view(), name='mailing_attempt_list'),
+    path(
+        "attempts/", views.MailingAttemptListView.as_view(), name="mailing_attempt_list"
+    ),
 ]
