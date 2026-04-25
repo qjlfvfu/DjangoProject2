@@ -1,0 +1,41 @@
+name: Django GOTEST
+
+on:
+  push:
+    branches: [main,Docker-branch]
+  pull_request:
+    branches: [main]
+
+job:
+test:
+  runs_on: ubuntu-latest
+
+  steps:
+      - name: Checkout code
+        uses: action/checkout@v4
+
+
+      - name: Set up Python
+        uses: action/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: install dependencies
+        uses:
+          run: |
+            pip install -r requirements.txt
+
+      - name: Run migration
+        uses:
+          run: |
+            python manage.py migrate
+
+      - name: Run test
+        uses:
+          run: |
+            python manage.py test 
+              
+
+
+
+
