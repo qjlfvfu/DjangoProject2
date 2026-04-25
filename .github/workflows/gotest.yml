@@ -1,4 +1,4 @@
-name: Django Gotest
+name: Django GOTEST
 
 on:
   push:
@@ -8,8 +8,6 @@ on:
   workflow_call:
     secrets:
       SECRET_KEY:
-        required: true
-      DB_PASSWORD:
         required: true
 
 jobs:
@@ -28,21 +26,11 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Cache pip
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -54,14 +42,15 @@ jobs:
           DB_PASSWORD: postgres
           DB_HOST: localhost
           DB_PORT: 5432
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: python manage.py migrate
 
       - name: Run tests
         env:
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_NAME: test_db
           DB_USER: postgres
+          DB_PASSWORD: postgres
           DB_HOST: localhost
           DB_PORT: 5432
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: python manage.py test
