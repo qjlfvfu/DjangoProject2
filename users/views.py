@@ -74,7 +74,7 @@ class ProfileView(LoginRequiredMixin, DetailView):
             context["total_mailings"] = Mailing.objects.filter(
                 owner=self.request.user
             ).count()
-        except Exception as e:
+        except Exception:
             # Если модели еще не созданы или приложение не установлено
             context["total_clients"] = 0
             context["total_messages"] = 0

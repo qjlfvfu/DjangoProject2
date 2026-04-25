@@ -99,7 +99,7 @@ class Mailing(models.Model):
                     value.get("minute", 0),
                     value.get("second", 0),
                 )
-            except:
+            except Exception:
                 pass
 
         return value
