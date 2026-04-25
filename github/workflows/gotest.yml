@@ -2,40 +2,66 @@ name: Django GOTEST
 
 on:
   push:
-    branches: [main,Docker-branch]
+    branches: [main, Docker-branch]
   pull_request:
     branches: [main]
+  workflow_call:
+    secrets:
+      SECRET_KEY:
+        required: true
+      DB_PASSWORD:
+        required: true
 
-job:
-test:
-  runs_on: ubuntu-latest
+jobs:
+  test:
+    runs-on: ubuntu-latest
 
-  steps:
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s
+
+    steps:
       - name: Checkout code
-        uses: action/checkout@v4
-
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: action/setup-python@v5
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: '3.11'
 
-      - name: install dependencies
-        uses:
-          run: |
-            pip install -r requirements.txt
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-      - name: Run migration
-        uses:
-          run: |
-            python manage.py migrate
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      - name: Run test
-        uses:
-          run: |
-            python manage.py test 
-              
+      - name: Run migrations
+        env:
+          DB_NAME: test_db
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_PORT: 5432
+        run: python manage.py migrate
 
-
-
-
+      - name: Run tests
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: test_db
+          DB_USER: postgres
+          DB_HOST: localhost
+          DB_PORT: 5432
+        run: python manage.py test

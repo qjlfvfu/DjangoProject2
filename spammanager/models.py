@@ -6,6 +6,7 @@ from users.models import CustomUser, Client
 
 class Message(models.Model):
     """Сообщение для рассылки"""
+    objects = None
     subject = models.CharField(max_length=255, verbose_name="Тема письма")
     body = models.TextField(verbose_name="Тело письма")
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='messages', verbose_name="Владелец")
@@ -24,6 +25,7 @@ class Mailing(models.Model):
     """Рассылка"""
 
     # Статусы рассылки
+    objects = None
     STATUS_CREATED = 'created'
     STATUS_STARTED = 'started'
     STATUS_COMPLETED = 'completed'
@@ -165,6 +167,7 @@ class Mailing(models.Model):
 class MailingAttempt(models.Model):
     """Попытка отправки"""
 
+    objects = None
     STATUS_SUCCESS = 'success'
     STATUS_FAILED = 'failed'
 
