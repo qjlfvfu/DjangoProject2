@@ -143,9 +143,9 @@ is_active: BooleanField
 python
 from spammanager.models import Client, Message
 from django.contrib.auth import get_user_model
-
 User = get_user_model()
-user = User.objects.first()ёё`
+user = User.objects.first()ёё
+`
 
 ## Создание клиентов
 
@@ -172,6 +172,29 @@ LOGOUT_REDIRECT_URL = 'spammanager:home'
 
 ## Кастомная модель пользователя
 AUTH_USER_MODEL = 'users.CustomUser'
+
+## Деплой
+
+### Подготовка сервера
+
+Настройте SSH доступ к серверу
+
+Добавьте секреты в GitHub Secrets:
+
+* SSH_KEY — приватный ключ
+* SSH_USER — имя пользователя
+* SERVER_IP — IP сервера
+* DEPLOY_DIR — путь к проекту
+
+Автоматический деплой
+При пуше в ветку main GitHub Actions:
+
+1. Запускает линтер
+2. Запускает тесты
+3. Копирует файлы на сервер
+4. Устанавливает зависимости
+5. Применяет миграции
+6. Перезапускает приложение
 
 ## 📝 Требования к окружению
 1. [ ] Python 3.13 или выше
