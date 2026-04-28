@@ -1,0 +1,87 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-djangoproject2_db}
+      POSTGRES_USER: ${DB_USER:-djangoproject2_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-your_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-djangoproject2_user}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DEBUG=False
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - SECRET_KEY=${SECRET_KEY}
+
+  celery:
+    build: .
+    command: celery -A config worker -l info
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+
+  celery-beat:
+    build: .
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      celery:
+        condition: service_started
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "8000:8000"      # HTTP — стандартный порт
+      - "443:443"    # HTTPS — стандартный порт
+    volumes:
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:

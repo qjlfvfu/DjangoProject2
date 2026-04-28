@@ -1,0 +1,165 @@
+{% extends 'spammanager/base.html' %}
+
+{% block title %}Рассылка #{{ mailing.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Рассылка #{{ mailing.id }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Статус:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <span class="badge bg-{% if mailing.status == 'started' %}success{% elif mailing.status == 'completed' %}secondary{% else %}primary{% endif %} fs-6">
+                                {{ mailing.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Дата и время начала:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ mailing.start_time|date:"d.m.Y H:i" }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Дата и время окончания:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            {{ mailing.end_time|date:"d.m.Y H:i" }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Сообщение:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <strong>{{ mailing.message.subject }}</strong>
+                            <hr>
+                            <p>{{ mailing.message.body|linebreaks }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <strong>Получатели:</strong>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="list-group">
+                                {% for recipient in mailing.recipients.all %}
+                                <div class="list-group-item">
+                                    {{ recipient.full_name }} <br>
+                                    <small class="text-muted">{{ recipient.email }}</small>
+                                </div>
+                                {% empty %}
+                                <p class="text-muted">Нет получателей</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="{% url 'spammanager:mailing_update' mailing.pk %}" class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> Редактировать
+                        </a>
+                        <a href="{% url 'spammanager:mailing_delete' mailing.pk %}" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Удалить
+                        </a>
+                        {% if mailing.can_send %}
+                        <form method="post" action="{% url 'spammanager:mailing_send' mailing.pk %}"
+                              style="display: inline;"
+                              onsubmit="return confirm('Запустить рассылку сейчас?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-send"></i> Запустить рассылку
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="{% url 'spammanager:mailing_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Назад к списку
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Статистика -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Статистика отправки</h5>
+                </div>
+                <div class="card-body">
+                    {% with total=attempts.count success=attempts|dictsort:"status"|length %}
+                    <div class="text-center mb-3">
+                        <h2 class="display-4">{{ total }}</h2>
+                        <p class="text-muted">Всего попыток</p>
+                    </div>
+                    {% endwith %}
+
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="bg-success text-white p-2 rounded">
+                                {% with success_count=attempts|dictsort:"status"|length %}
+                                <h3>{{ success_count }}</h3>
+                                {% endwith %}
+                                <small>Успешно</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-danger text-white p-2 rounded">
+                                {% with failed_count=attempts|dictsort:"status"|length %}
+                                <h3>{{ failed_count }}</h3>
+                                {% endwith %}
+                                <small>Ошибок</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Последние попытки -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Последние попытки</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for attempt in attempts %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">{{ attempt.attempt_time|date:"d.m.Y H:i" }}</small>
+                                <span class="badge bg-{% if attempt.status == 'success' %}success{% else %}danger{% endif %}">
+                                    {{ attempt.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="mt-1">
+                                <small>{{ attempt.recipient.email }}</small>
+                            </div>
+                            <div class="mt-1">
+                                <small class="text-muted">{{ attempt.server_response|truncatechars:50 }}</small>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted">
+                            Нет попыток отправки
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

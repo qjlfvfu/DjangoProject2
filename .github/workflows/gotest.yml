@@ -1,0 +1,56 @@
+name: Django GOTEST
+
+on:
+  push:
+    branches: [main, Docker-branch]
+  pull_request:
+    branches: [main]
+  workflow_call:
+    secrets:
+      SECRET_KEY:
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run migrations
+        env:
+          DB_NAME: test_db
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_PORT: 5432
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: python manage.py migrate
+
+      - name: Run tests
+        env:
+          DB_NAME: test_db
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_HOST: localhost
+          DB_PORT: 5432
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: python manage.py test

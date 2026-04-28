@@ -29,6 +29,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'spammanager:mailing_list' %}">Рассылки</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'spammanager:mailing_attempt_list' %}">
+                            <i class="bi bi-clock-history"></i> История отправок
+                        </a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
