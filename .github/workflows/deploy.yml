@@ -1,4 +1,5 @@
 name: Deploy
+
 on:
   push:
     branches: [main, Docker-branch]
@@ -24,18 +25,23 @@ jobs:
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
-            ssh-private-key: ${{ secrets.SSH_KEY }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
       - name: Copy project files to server
         run: |
-            rsync -avz --exclude '__pycache__' . ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}
-
+          rsync -avz --exclude '__pycache__' --exclude '.env' --exclude 'venv' --exclude '.git' ./ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }}:${{ secrets.DEPLOY_DIR }}
       - name: Install dependencies on server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             cd ${{ secrets.DEPLOY_DIR }}
             python3 -m venv venv
             source venv/bin/activate
+            pip install --upgrade pip
             pip install -r requirements.txt
           EOF
 
@@ -55,8 +61,16 @@ jobs:
             python manage.py collectstatic --noinput
           EOF
 
+      - name: Set permissions
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            sudo chmod -R 755 ${{ secrets.DEPLOY_DIR }}
+            sudo chown -R ${{ secrets.SSH_USER }}:www-data ${{ secrets.DEPLOY_DIR }}
+          EOF
+
       - name: Restart application
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            sudo systemctl restart myapp.service
+            sudo systemctl restart gunicorn
+            sudo systemctl restart nginx
           EOF
