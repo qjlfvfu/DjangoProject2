@@ -18,8 +18,12 @@ jobs:
     needs: call-tests
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build Docker images
-        run: docker-compose build
+        run: docker compose build
 
   deploy:
     runs-on: ubuntu-latest
@@ -43,11 +47,32 @@ jobs:
       - name: Deploy with Docker
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            # Установка Docker Compose на сервере (если нет)
+            if ! command -v docker compose &> /dev/null; then
+              echo "Установка Docker Compose..."
+              sudo apt-get update
+              sudo apt-get install docker-compose-plugin -y
+            fi
+          
             cd ${{ secrets.DEPLOY_DIR }}
             git pull
-            docker-compose down
-            docker-compose build
-            docker-compose up -d
-            docker-compose exec -T backend python manage.py migrate
-            docker-compose exec -T backend python manage.py collectstatic --noinput
+          
+            # Остановка старых контейнеров
+            docker compose down || docker-compose down
+          
+            # Сборка и запуск
+            docker compose build || docker-compose build
+            docker compose up -d || docker-compose up -d
+          
+            # Ожидание запуска контейнера
+            sleep 10
+          
+            # Выполнение миграций
+            docker compose exec -T backend python manage.py migrate || docker-compose exec -T backend python manage.py migrate
+          
+            # Сбор статики
+            docker compose exec -T backend python manage.py collectstatic --noinput || docker-compose exec -T backend python manage.py collectstatic --noinput
+          
+            # Очистка старых образов
+            docker system prune -f
           EOF
