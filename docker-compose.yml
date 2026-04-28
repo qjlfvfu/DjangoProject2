@@ -73,7 +73,7 @@ services:
   nginx:
     build: ./nginx
     ports:
-      - "80:80"      # HTTP — стандартный порт
+      - "8000:8000"      # HTTP — стандартный порт
       - "443:443"    # HTTPS — стандартный порт
     volumes:
       - ./staticfiles:/app/staticfiles
