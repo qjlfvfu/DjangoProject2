@@ -2,7 +2,7 @@ name: Django GOTEST
 
 on:
   push:
-    branches: [main, Docker-branch]
+    branches: [main, Docker-branch, Final-branch]
   pull_request:
     branches: [main]
   workflow_call:
