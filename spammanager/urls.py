@@ -1,10 +1,17 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
 app_name = "spammanager"
 
+# API Router
+router = DefaultRouter()
+router.register(r"api/mailings", views.MailingViewSet, basename="api_mailing")
+
 urlpatterns = [
-    # Главная
+    # API маршруты
+    path("", include(router.urls)),
+    # HTML маршруты (для веб-интерфейса)
     path("", views.HomeView.as_view(), name="home"),
     # Клиенты
     path("clients/", views.ClientListView.as_view(), name="client_list"),

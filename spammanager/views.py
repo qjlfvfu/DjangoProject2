@@ -12,9 +12,12 @@ from django.views.generic import (
     TemplateView,
 )
 from django.contrib.auth.mixins import LoginRequiredMixin
+from rest_framework import permissions, viewsets
+
 from users.forms import ClientForm
 from .forms import MailingForm, MessageForm
 from .models import Client, Message, Mailing, MailingAttempt
+from .serializers import MailingSerializer
 
 
 class HomeView(TemplateView):
@@ -327,3 +330,17 @@ class ClientDeleteView(LoginRequiredMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, "Клиент успешно удален!")
         return super().delete(request, *args, **kwargs)
+
+
+class MailingViewSet(viewsets.ModelViewSet):
+    """API ViewSet для рассылок"""
+
+    queryset = Mailing.objects.all()
+    serializer_class = MailingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Mailing.objects.filter(owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
