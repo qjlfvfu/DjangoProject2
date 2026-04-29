@@ -1,8 +1,7 @@
 from celery import shared_task
 from django.conf import settings
 from django.core.mail import send_mail
-from django.utils import timezone
-from .models import Mailing, MailingAttempt, Client, Message
+from .models import Mailing, MailingAttempt
 import logging
 
 logger = logging.getLogger(__name__)
